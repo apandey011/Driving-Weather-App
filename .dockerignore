@@ -1,11 +1,33 @@
+# Git
 .git
 .gitignore
+
+# Claude Code
 CLAUDE.md
+.claude/
+
+# Python
 backend/.venv
 backend/.env
-frontend/.env
-frontend/node_modules
-node_modules
 **/__pycache__
 **/*.pyc
+**/*.pyo
+
+# Node
+frontend/node_modules
+frontend/dist
+node_modules
+
+# Docker
+Dockerfile
+.dockerignore
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# IDE / logs
+.vscode/
+.idea/
+*.log
+*.swp
