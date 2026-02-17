@@ -4,8 +4,6 @@
 
 A full-stack web application that finds the best driving route between two locations based on real-time weather conditions. It fetches multiple route alternatives from Google Maps, samples weather at 15-minute intervals along each route, and uses a machine learning model to score and recommend the safest route.
 
-<!-- Add a screenshot of the app here: -->
-<!-- ![Route Weather Screenshot](screenshot.png) -->
 
 ## How It Works
 
@@ -29,10 +27,10 @@ A full-stack web application that finds the best driving route between two locat
 
 ```
 React SPA ──POST /api/route-weather──▶ FastAPI
-                                         ├── Google Directions API → 3+ route alternatives
-                                         ├── Haversine interpolation → waypoints every 15 min
-                                         ├── Open-Meteo API (async, 5 concurrent) → hourly forecasts
-                                         └── ML scoring + rule-based advisories → ranked routes
+        ├── Google Directions API → 3+ route alternatives
+        ├── Haversine interpolation → waypoints every 15 min
+        ├── Open-Meteo API (async, 5 concurrent) → hourly forecasts
+        └── ML scoring + rule-based advisories → ranked routes
 ```
 
 ### Technical Highlights
