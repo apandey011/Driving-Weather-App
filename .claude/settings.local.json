@@ -10,7 +10,8 @@
       "Bash(pip install:*)",
       "Bash(python3:*)",
       "Bash(pip --version:*)",
-      "Bash(/Users/apandey/claude-test/backend/.venv/bin/python3:*)"
+      "Bash(/Users/apandey/claude-test/backend/.venv/bin/python3:*)",
+      "mcp__ide__executeCode"
     ]
   }
 }
