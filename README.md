@@ -86,7 +86,7 @@ cd frontend
 npm run build    # runs tsc -b && vite build, outputs to dist/
 ```
 
-## API 
+## API
 
 Single endpoint: **POST `/api/route-weather`**
 
