@@ -106,7 +106,7 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <div className="header-left">
-          <h1>Route Weather</h1>
+          <h1>Route Weather by Aadi Pandey</h1>
           <p>See the weather along your drive at 15-minute intervals</p>
         </div>
         <TempToggle
