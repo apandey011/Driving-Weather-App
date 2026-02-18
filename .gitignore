@@ -35,6 +35,7 @@ node_modules/
 yarn.lock
 frontend/playwright-report/
 frontend/test-results/
+frontend/tsconfig.tsbuildinfo
 
 # Build directory
 dist/
