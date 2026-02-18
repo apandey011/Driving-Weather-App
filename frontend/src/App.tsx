@@ -173,7 +173,7 @@ export default function App() {
         )}
         <div className="map-container">
           {E2E_MODE ? (
-            <div data-testid="e2e-route-map" />
+            <div data-testid="e2e-route-map" style={{ minHeight: 1, minWidth: 1 }} />
           ) : (
             <RouteMap
               routeData={routeData}
