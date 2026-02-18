@@ -1,9 +1,12 @@
 import asyncio
+import logging
 from datetime import datetime
 
 import httpx
 
 from ..models import Waypoint, WeatherData
+
+logger = logging.getLogger(__name__)
 
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 
@@ -68,6 +71,7 @@ async def _fetch_weather_for_point(
                 "timezone": "auto",
             },
         )
+    response.raise_for_status()
     data = response.json()
 
     if "hourly" not in data:
@@ -94,24 +98,30 @@ async def _fetch_weather_for_point(
     )
 
 
+client = httpx.AsyncClient(timeout=30.0)
+
+
 async def get_weather_for_waypoints(
     waypoints: list[Waypoint],
 ) -> list[Waypoint]:
     """Fetch weather for all waypoints in parallel."""
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        tasks = [
-            _fetch_weather_for_point(
-                client,
-                wp.location.lat,
-                wp.location.lng,
-                wp.estimated_time,
-            )
-            for wp in waypoints
-        ]
-        weather_results = await asyncio.gather(*tasks, return_exceptions=True)
+    tasks = [
+        _fetch_weather_for_point(
+            client,
+            wp.location.lat,
+            wp.location.lng,
+            wp.estimated_time,
+        )
+        for wp in waypoints
+    ]
+    weather_results = await asyncio.gather(*tasks, return_exceptions=True)
 
     for wp, weather in zip(waypoints, weather_results):
         if isinstance(weather, Exception):
+            logger.warning(
+                "Weather fetch failed for (%s, %s): %s",
+                wp.location.lat, wp.location.lng, weather,
+            )
             continue  # leave wp.weather as None
         wp.weather = weather
 

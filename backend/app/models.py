@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class RouteRequest(BaseModel):
-    origin: str
-    destination: str
+    origin: str = Field(min_length=1, max_length=500)
+    destination: str = Field(min_length=1, max_length=500)
     departure_time: datetime | None = None
 
 

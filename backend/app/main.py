@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -7,15 +8,30 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import settings
 from .routes import router
+from .services import directions, weather
 
-app = FastAPI(title="Route Weather API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    await directions.client.aclose()
+    await weather.client.aclose()
+
+
+app = FastAPI(title="Route Weather API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.frontend_origin],
-    allow_methods=["*"],
+    allow_methods=["POST", "OPTIONS"],
     allow_headers=["*"],
 )
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
 
 app.include_router(router)
 

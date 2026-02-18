@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from pathlib import Path
 
 import httpx
@@ -18,6 +19,8 @@ from ..models import (
     WeatherAdvisory,
     WeatherData,
 )
+
+logger = logging.getLogger(__name__)
 
 GEOCODE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
 
@@ -128,13 +131,13 @@ async def _reverse_geocode_batch(
 
     results: dict[tuple[float, float], str] = {}
 
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=10.0) as geocode_client:
         tasks = []
         keys = []
         for key, (lat, lng) in unique.items():
             keys.append(key)
             tasks.append(
-                client.get(
+                geocode_client.get(
                     GEOCODE_URL,
                     params={
                         "latlng": f"{lat},{lng}",
@@ -354,7 +357,13 @@ async def score_routes(routes: list[RouteWithWeather]) -> RouteRecommendation:
     # Collect advisories for all routes in parallel (includes reverse geocoding)
     advisory_tasks = [_collect_advisories(r.waypoints) for r in routes]
     all_advisories_raw = await asyncio.gather(*advisory_tasks, return_exceptions=True)
-    all_advisories = [a if isinstance(a, list) else [] for a in all_advisories_raw]
+    all_advisories = []
+    for a in all_advisories_raw:
+        if isinstance(a, list):
+            all_advisories.append(a)
+        else:
+            logger.warning("Advisory collection failed: %s", a)
+            all_advisories.append([])
 
     # Compute sub-scores for the UI
     scores: list[RouteScore] = []

@@ -35,6 +35,8 @@ export default function RouteRecommendationBanner({
               key={idx}
               className={`route-score-chip${isRecommended ? " recommended" : ""}${isSelected ? " selected" : ""}`}
               onClick={() => onRouteSelect(route.route_index)}
+              aria-label={`${route.summary || `Route ${idx + 1}`}, score ${Math.round(score.overall_score)}${isRecommended ? ", recommended" : ""}`}
+              aria-pressed={isSelected}
             >
               <span className="score-value">
                 {Math.round(score.overall_score)}

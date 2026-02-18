@@ -1,25 +1,32 @@
+import logging
+
 import httpx
 from fastapi import HTTPException
 
 from ..config import settings
 
+logger = logging.getLogger(__name__)
+
 DIRECTIONS_URL = "https://maps.googleapis.com/maps/api/directions/json"
+
+client = httpx.AsyncClient(timeout=30.0)
 
 
 async def get_routes(origin: str, destination: str) -> dict:
     """Fetch all route alternatives from Google Directions API."""
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.get(
-            DIRECTIONS_URL,
-            params={
-                "origin": origin,
-                "destination": destination,
-                "mode": "driving",
-                "alternatives": "true",
-                "key": settings.google_maps_api_key,
-            },
-        )
-        data = response.json()
+    logger.info("Fetching directions: %s -> %s", origin, destination)
+    response = await client.get(
+        DIRECTIONS_URL,
+        params={
+            "origin": origin,
+            "destination": destination,
+            "mode": "driving",
+            "alternatives": "true",
+            "key": settings.google_maps_api_key,
+        },
+    )
+    response.raise_for_status()
+    data = response.json()
 
     if data["status"] != "OK":
         raise HTTPException(

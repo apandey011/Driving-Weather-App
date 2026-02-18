@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { memo, useEffect } from "react";
 import {
   AdvancedMarker,
   InfoWindow,
@@ -19,7 +19,7 @@ interface Props {
   dimmed?: boolean;
 }
 
-export default function WeatherMarker({ waypoint, useFahrenheit, isSelected, onSelect, onDeselect, scale, dimmed }: Props) {
+export default memo(function WeatherMarker({ waypoint, useFahrenheit, isSelected, onSelect, onDeselect, scale, dimmed }: Props) {
   const [markerRef, marker] = useAdvancedMarkerRef();
   const map = useMap();
 
@@ -51,4 +51,4 @@ export default function WeatherMarker({ waypoint, useFahrenheit, isSelected, onS
       )}
     </>
   );
-}
+});

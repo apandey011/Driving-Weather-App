@@ -12,7 +12,7 @@ interface Props {
 
 export default function WeatherPanel({ waypoints, useFahrenheit, onSelectWaypoint, onClose, advisories }: Props) {
   return (
-    <div className="weather-panel">
+    <div className="weather-panel" role="region" aria-label="Weather details">
       <div className="panel-header">
         <h3 className="panel-title">Weather Along Route</h3>
         <button className="panel-close" onClick={onClose} aria-label="Close">&times;</button>

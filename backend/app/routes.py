@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timezone
 
+import httpx
 from fastapi import APIRouter, HTTPException
 
 from .models import RouteRequest, RouteWithWeather, MultiRouteResponse
@@ -93,6 +94,14 @@ async def route_weather(request: RouteRequest):
         return response
     except HTTPException:
         raise
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="External API timed out")
+    except httpx.HTTPStatusError as exc:
+        logger.error("Upstream API error: %s", exc.response.status_code)
+        raise HTTPException(
+            status_code=502,
+            detail=f"Upstream API error: {exc.response.status_code}",
+        )
     except Exception as exc:
         logger.exception("Unexpected error in route_weather")
         raise HTTPException(status_code=500, detail=str(exc))

@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { fetchRouteWeather } from "./api";
 import { MultiRouteResponse } from "./types";
+import ErrorBoundary from "./components/ErrorBoundary";
 import LocationForm, { LocationFormHandle } from "./components/LocationForm";
 import { loadHistory, saveToHistory, RecentRoute } from "./components/RecentRoutes";
 import RouteMap from "./components/RouteMap";
@@ -90,17 +91,30 @@ export default function App() {
     }
   }
 
-  function handleRetry() {
+  const handleRetry = useCallback(() => {
     if (lastSubmitRef.current) {
       const { origin, destination, departureTime } = lastSubmitRef.current;
       handleSubmit(origin, destination, departureTime);
     }
-  }
+  }, []);
 
-  function handleRouteSelect(index: number) {
+  const handleRouteSelect = useCallback((index: number) => {
     setSelectedRouteIndex(index);
     setSelectedWaypointIdx(null);
-  }
+  }, []);
+
+  const handleDeselectWaypoint = useCallback(() => {
+    setSelectedWaypointIdx(null);
+  }, []);
+
+  const handleToggleTemp = useCallback(() => {
+    setUseFahrenheit((f) => !f);
+  }, []);
+
+  const handleClosePanel = useCallback(() => {
+    setSelectedRouteIndex(null);
+    setSelectedWaypointIdx(null);
+  }, []);
 
   const appContent = (
     <div className="app">
@@ -111,14 +125,14 @@ export default function App() {
         </div>
         <TempToggle
           useFahrenheit={useFahrenheit}
-          onToggle={() => setUseFahrenheit((f) => !f)}
+          onToggle={handleToggleTemp}
         />
       </header>
 
       <LocationForm ref={formRef} onSubmit={handleSubmit} loading={loading} recentHistory={recentHistory} />
 
       {error && (
-        <div className="error-banner">
+        <div className="error-banner" role="alert">
           <span className="error-message">{error}</span>
           <div className="error-actions">
             <button className="error-retry-btn" onClick={handleRetry}>Retry</button>
@@ -166,7 +180,7 @@ export default function App() {
 
       <div className="main-content">
         {loading && (
-          <div className="loading-overlay">
+          <div className="loading-overlay" aria-live="polite">
             <div className="loading-spinner" />
             <p className="loading-text">Finding routes and weather...</p>
           </div>
@@ -183,7 +197,7 @@ export default function App() {
               useFahrenheit={useFahrenheit}
               selectedWaypointIdx={selectedWaypointIdx}
               onSelectWaypoint={setSelectedWaypointIdx}
-              onDeselectWaypoint={() => setSelectedWaypointIdx(null)}
+              onDeselectWaypoint={handleDeselectWaypoint}
             />
           )}
         </div>
@@ -192,7 +206,7 @@ export default function App() {
             waypoints={selectedRoute.waypoints}
             useFahrenheit={useFahrenheit}
             onSelectWaypoint={setSelectedWaypointIdx}
-            onClose={() => { setSelectedRouteIndex(null); setSelectedWaypointIdx(null); }}
+            onClose={handleClosePanel}
             advisories={
               routeData?.recommendation && selectedRouteIndex !== null
                 ? routeData.recommendation.advisories[selectedRouteIndex] ?? []
@@ -205,12 +219,14 @@ export default function App() {
   );
 
   if (E2E_MODE) {
-    return appContent;
+    return <ErrorBoundary>{appContent}</ErrorBoundary>;
   }
 
   return (
-    <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
-      {appContent}
-    </APIProvider>
+    <ErrorBoundary>
+      <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
+        {appContent}
+      </APIProvider>
+    </ErrorBoundary>
   );
 }
