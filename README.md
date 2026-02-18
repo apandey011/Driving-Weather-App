@@ -56,8 +56,8 @@ React SPA ──POST /api/route-weather──▶ FastAPI
 
 ### Prerequisites
 
-- Node.js 18+
-- Python 3.10+
+- Node.js 20 (see `.nvmrc`)
+- Python 3.12 (see `.python-version`)
 - Google Cloud API key with Maps JavaScript API, Places API, and Directions API enabled
 
 ### Local Development
@@ -93,6 +93,21 @@ cd frontend
 npm install
 npm run dev
 ```
+
+### Testing
+
+```bash
+# Backend tests (pytest)
+cd backend && python -m pytest
+
+# Frontend unit tests (Vitest)
+cd frontend && npm test
+
+# Frontend e2e smoke test (Playwright — install browsers first: npx playwright install)
+cd frontend && npm run test:e2e
+```
+
+CI runs automatically on push to `main` and on pull requests via [GitHub Actions](.github/workflows/ci.yml).
 
 ### Docker
 
