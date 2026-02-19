@@ -2,6 +2,27 @@ import { MultiRouteResponse } from "./types";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
+function normalizeDepartureTime(departureTime?: string): string | null {
+  if (!departureTime) return null;
+
+  const value = departureTime.trim();
+  if (!value) return null;
+
+  const hasTimezoneInfo = /(Z|[+-]\d{2}:\d{2})$/i.test(value);
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    throw new Error("Invalid departure time format");
+  }
+
+  // Already timezone-aware ISO-ish value: keep as-is.
+  if (hasTimezoneInfo) {
+    return value;
+  }
+
+  // Naive datetime-local value: interpret as local time and convert to UTC.
+  return parsed.toISOString();
+}
+
 export async function fetchRouteWeather(
   origin: string,
   destination: string,
@@ -17,7 +38,7 @@ export async function fetchRouteWeather(
       body: JSON.stringify({
         origin,
         destination,
-        departure_time: departureTime || null,
+        departure_time: normalizeDepartureTime(departureTime),
       }),
       signal: controller.signal,
     });

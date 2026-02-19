@@ -232,3 +232,20 @@ class TestRouteWeatherEndpoint:
 
             assert resp.status_code == 500
             assert resp.json()["detail"] == "Internal server error"
+
+    @pytest.mark.asyncio
+    async def test_naive_departure_time_returns_422(self):
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            resp = await client.post(
+                "/api/route-weather",
+                json={
+                    "origin": "SF",
+                    "destination": "LA",
+                    "departure_time": "2026-02-16T10:00",
+                },
+            )
+
+        assert resp.status_code == 422
