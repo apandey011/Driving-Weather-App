@@ -197,6 +197,20 @@ class TestGetRoutes:
 
     @pytest.mark.asyncio
     @respx.mock
+    async def test_empty_routes_raises_404(self):
+        respx.get(DIRECTIONS_URL).mock(
+            return_value=httpx.Response(
+                200, json=_directions_response(routes=[])
+            )
+        )
+        with pytest.raises(HTTPException) as exc_info:
+            await get_routes("SF", "LA")
+
+        assert exc_info.value.status_code == 404
+        assert "No routes found" in str(exc_info.value.detail)
+
+    @pytest.mark.asyncio
+    @respx.mock
     async def test_multiple_routes_returned(self):
         respx.get(DIRECTIONS_URL).mock(
             return_value=httpx.Response(200, json=_multi_leg_response())

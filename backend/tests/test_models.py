@@ -43,6 +43,14 @@ class TestRouteRequest:
         with pytest.raises(ValidationError):
             RouteRequest(origin="SF")
 
+    def test_naive_datetime_raises_validation_error(self):
+        with pytest.raises(ValidationError):
+            RouteRequest(
+                origin="SF",
+                destination="LA",
+                departure_time=datetime(2026, 2, 16, 10, 0),
+            )
+
 
 # ---------------------------------------------------------------------------
 # Waypoint
@@ -182,6 +190,22 @@ class TestWeatherAdvisory:
             message="Heavy rain expected near SF",
         )
         assert adv.severity == "danger"
+
+    def test_warning_severity(self):
+        adv = WeatherAdvisory(
+            type="fog",
+            severity="warning",
+            message="Fog near SF",
+        )
+        assert adv.severity == "warning"
+
+    def test_invalid_severity_raises_validation_error(self):
+        with pytest.raises(ValidationError):
+            WeatherAdvisory(
+                type="rain",
+                severity="info",
+                message="Some rain",
+            )
 
     def test_missing_field_raises_validation_error(self):
         with pytest.raises(ValidationError):

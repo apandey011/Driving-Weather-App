@@ -34,6 +34,9 @@ async def get_routes(origin: str, destination: str) -> dict:
             detail=f"Directions API error: {data['status']}",
         )
 
+    if not data["routes"]:
+        raise HTTPException(status_code=404, detail="No routes found")
+
     first_leg = data["routes"][0]["legs"][0]
     last_leg = data["routes"][0]["legs"][-1]
 

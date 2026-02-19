@@ -9,8 +9,8 @@ export default function WeatherAdvisories({ advisories }: Props) {
 
   return (
     <div className="advisories">
-      {advisories.map((adv, idx) => (
-        <div key={idx} className={`advisory advisory-${adv.severity}`}>
+      {advisories.map((adv) => (
+        <div key={`${adv.type}-${adv.severity}`} className={`advisory advisory-${adv.severity}`}>
           <span className="advisory-icon">
             {adv.severity === "danger" ? "\u26A0\uFE0F" : "\u26A0"}
           </span>

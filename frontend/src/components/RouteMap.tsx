@@ -228,21 +228,28 @@ function RoutesOverlay({
   }, [routeData]);
 
   // Build flat list of all waypoints, selected route first for priority
-  const allEntries: TaggedWaypoint[] = [];
-  const selectedFirst = [...routeData.routes].sort((a, b) => {
-    if (a.route_index === selectedRouteIndex) return -1;
-    if (b.route_index === selectedRouteIndex) return 1;
-    return 0;
-  });
-  for (const route of selectedFirst) {
-    for (let i = 0; i < route.waypoints.length; i++) {
-      allEntries.push({ waypoint: route.waypoints[i], routeIndex: route.route_index, wpIndex: i });
+  const allEntries = useMemo(() => {
+    const entries: TaggedWaypoint[] = [];
+    const selectedFirst = [...routeData.routes].sort((a, b) => {
+      if (a.route_index === selectedRouteIndex) return -1;
+      if (b.route_index === selectedRouteIndex) return 1;
+      return 0;
+    });
+    for (const route of selectedFirst) {
+      for (let i = 0; i < route.waypoints.length; i++) {
+        entries.push({ waypoint: route.waypoints[i], routeIndex: route.route_index, wpIndex: i });
+      }
     }
-  }
+    return entries;
+  }, [routeData, selectedRouteIndex]);
 
-  const visibleKeys = map
-    ? getVisibleWaypointKeys(allEntries, map, selectedRouteIndex, selectedWaypointIdx)
-    : new Set(allEntries.map((e) => `${e.routeIndex}-${e.wpIndex}`));
+  const visibleKeys = useMemo(
+    () =>
+      map
+        ? getVisibleWaypointKeys(allEntries, map, selectedRouteIndex, selectedWaypointIdx)
+        : new Set(allEntries.map((e) => `${e.routeIndex}-${e.wpIndex}`)),
+    [allEntries, map, selectedRouteIndex, selectedWaypointIdx, zoom],
+  );
 
   // Render weather markers and duration labels for all routes
   return (
@@ -277,7 +284,7 @@ function RoutesOverlay({
         const dimmed = selectedRouteIndex !== null && !isSelected;
 
         return route.waypoints.map((wp, wpIdx) => {
-          if (!visibleKeys.has(`${route.route_index}-${wpIdx}`)) return null;
+          if (!visibleKeys.has(`${route.route_index}-${wpIdx}`) || !wp.weather) return null;
 
           return (
             <WeatherMarker

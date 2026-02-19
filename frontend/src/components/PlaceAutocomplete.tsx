@@ -20,6 +20,10 @@ const PlaceAutocomplete = forwardRef<HTMLInputElement, Props>(
     const inputRef = useRef<HTMLInputElement>(null);
     const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
+    const onPlaceSelectRef = useRef(onPlaceSelect);
+    onPlaceSelectRef.current = onPlaceSelect;
+    const onManualEditRef = useRef(onManualEdit);
+    onManualEditRef.current = onManualEdit;
     const places = useMapsLibrary("places");
     const [showDropdown, setShowDropdown] = useState(false);
     const [geoLoading, setGeoLoading] = useState(false);
@@ -37,11 +41,11 @@ const PlaceAutocomplete = forwardRef<HTMLInputElement, Props>(
 
       autocompleteRef.current.addListener("place_changed", () => {
         const place = autocompleteRef.current?.getPlace();
-        if (place?.formatted_address && onPlaceSelect) {
+        if (place?.formatted_address && onPlaceSelectRef.current) {
           const query = place.place_id
             ? `place_id:${place.place_id}`
             : place.formatted_address;
-          onPlaceSelect(query);
+          onPlaceSelectRef.current(query);
         }
         setShowDropdown(false);
       });
@@ -65,7 +69,7 @@ const PlaceAutocomplete = forwardRef<HTMLInputElement, Props>(
     }
 
     function handleInput() {
-      onManualEdit?.();
+      onManualEditRef.current?.();
       if (inputRef.current?.value) {
         setShowDropdown(false);
       } else if (hasDropdownItems) {

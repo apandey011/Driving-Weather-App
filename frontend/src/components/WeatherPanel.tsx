@@ -23,6 +23,7 @@ export default function WeatherPanel({ waypoints, useFahrenheit, onSelectWaypoin
       <div className="panel-list">
         {waypoints.map((wp, idx) => {
           const { weather } = wp;
+          if (!weather) return null;
           const temp = useFahrenheit
             ? toF(weather.temperature_c)
             : Math.round(weather.temperature_c);
@@ -38,7 +39,10 @@ export default function WeatherPanel({ waypoints, useFahrenheit, onSelectWaypoin
             <div
               key={idx}
               className={`panel-row ${isFirst || isLast ? "panel-row-endpoint" : ""}`}
+              role="button"
+              tabIndex={0}
               onClick={() => onSelectWaypoint(idx)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelectWaypoint(idx); } }}
             >
               <span className="panel-emoji">
                 {weatherEmoji(weather.weather_code)}

@@ -9,6 +9,8 @@ interface Props {
 export default function WeatherCard({ waypoint, useFahrenheit }: Props) {
   const { weather, minutes_from_start, estimated_time } = waypoint;
 
+  if (!weather) return null;
+
   const temp = useFahrenheit ? toF(weather.temperature_c) : Math.round(weather.temperature_c);
   const feelsLike = useFahrenheit ? toF(weather.apparent_temperature_c) : Math.round(weather.apparent_temperature_c);
   const unit = useFahrenheit ? "\u00B0F" : "\u00B0C";

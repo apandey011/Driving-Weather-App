@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import AwareDatetime, BaseModel, Field
 
 
 class RouteRequest(BaseModel):
     origin: str = Field(min_length=1, max_length=500)
     destination: str = Field(min_length=1, max_length=500)
-    departure_time: datetime | None = None
+    departure_time: AwareDatetime | None = None
 
 
 class LatLng(BaseModel):
@@ -45,7 +46,7 @@ class RouteWithWeather(BaseModel):
 
 class WeatherAdvisory(BaseModel):
     type: str
-    severity: str
+    severity: Literal["warning", "danger"]
     message: str
 
 

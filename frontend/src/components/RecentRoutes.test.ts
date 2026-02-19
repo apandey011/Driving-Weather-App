@@ -1,4 +1,4 @@
-import { loadHistory, saveToHistory, clearHistory, RecentRoute } from "./RecentRoutes";
+import { loadHistory, saveToHistory, RecentRoute } from "./RecentRoutes";
 
 const STORAGE_KEY = "route-weather-history";
 
@@ -65,13 +65,4 @@ describe("RecentRoutes", () => {
     });
   });
 
-  describe("clearHistory", () => {
-    it("removes the storage key", () => {
-      saveToHistory(makeEntry());
-      expect(loadHistory()).toHaveLength(1);
-      clearHistory();
-      expect(loadHistory()).toEqual([]);
-      expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
-    });
-  });
 });

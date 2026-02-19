@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import settings
 from .routes import router
-from .services import directions, weather
+from .services import directions, scoring, weather
 
 
 @asynccontextmanager
@@ -16,6 +16,7 @@ async def lifespan(app: FastAPI):
     yield
     await directions.client.aclose()
     await weather.client.aclose()
+    await scoring.geocode_client.aclose()
 
 
 app = FastAPI(title="Route Weather API", lifespan=lifespan)
@@ -24,7 +25,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.frontend_origin],
     allow_methods=["POST", "OPTIONS"],
-    allow_headers=["*"],
+    allow_headers=["Content-Type"],
 )
 
 

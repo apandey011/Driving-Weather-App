@@ -231,4 +231,4 @@ class TestRouteWeatherEndpoint:
                 )
 
             assert resp.status_code == 500
-            assert "Unexpected failure" in resp.json()["detail"]
+            assert resp.json()["detail"] == "Internal server error"

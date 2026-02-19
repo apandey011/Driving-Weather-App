@@ -29,6 +29,7 @@ export default function App() {
     destination: string;
     departureTime?: string;
   } | null>(null);
+  const handleSubmitRef = useRef<typeof handleSubmit>(null!);
 
   const selectedRoute =
     routeData && selectedRouteIndex !== null
@@ -47,6 +48,9 @@ export default function App() {
       }, 0);
     }
   }, []);
+
+  // Keep ref updated so handleRetry always has the latest closure
+  handleSubmitRef.current = handleSubmit;
 
   async function handleSubmit(
     origin: string,
@@ -94,7 +98,7 @@ export default function App() {
   const handleRetry = useCallback(() => {
     if (lastSubmitRef.current) {
       const { origin, destination, departureTime } = lastSubmitRef.current;
-      handleSubmit(origin, destination, departureTime);
+      handleSubmitRef.current(origin, destination, departureTime);
     }
   }, []);
 
@@ -160,7 +164,7 @@ export default function App() {
                 navigator.clipboard.writeText(window.location.href).then(() => {
                   setLinkCopied(true);
                   setTimeout(() => setLinkCopied(false), 2000);
-                });
+                }).catch(() => {/* clipboard not available */});
               }}
             >
               {linkCopied ? "Copied!" : "Copy Link"}

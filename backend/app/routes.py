@@ -104,4 +104,4 @@ async def route_weather(request: RouteRequest):
         )
     except Exception as exc:
         logger.exception("Unexpected error in route_weather")
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise HTTPException(status_code=500, detail="Internal server error")

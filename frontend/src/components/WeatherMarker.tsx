@@ -31,6 +31,8 @@ export default memo(function WeatherMarker({ waypoint, useFahrenheit, isSelected
     }
   }, [isSelected, map, location.lat, location.lng]);
 
+  if (!weather) return null;
+
   return (
     <>
       <AdvancedMarker

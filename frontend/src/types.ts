@@ -18,7 +18,7 @@ export interface Waypoint {
   location: LatLng;
   minutes_from_start: number;
   estimated_time: string;
-  weather: WeatherData;
+  weather: WeatherData | null;
 }
 
 export interface RouteWithWeather {

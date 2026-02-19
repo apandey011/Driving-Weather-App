@@ -24,6 +24,8 @@ logger = logging.getLogger(__name__)
 
 GEOCODE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
 
+geocode_client = httpx.AsyncClient(timeout=10.0)
+
 # ---------------------------------------------------------------------------
 # WMO code → severity (0.0 = benign, 1.0 = extreme)
 # ---------------------------------------------------------------------------
@@ -62,7 +64,12 @@ WMO_SEVERITY: dict[int, float] = {
 # Load the pre-trained model once at import time
 # ---------------------------------------------------------------------------
 _MODEL_PATH = Path(__file__).resolve().parent.parent / "ml" / "route_model.joblib"
-_model = joblib.load(_MODEL_PATH)
+try:
+    _model = joblib.load(_MODEL_PATH)
+except FileNotFoundError:
+    raise RuntimeError(
+        f"ML model not found at {_MODEL_PATH}. Run: python -m app.ml.train_model"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -131,21 +138,20 @@ async def _reverse_geocode_batch(
 
     results: dict[tuple[float, float], str] = {}
 
-    async with httpx.AsyncClient(timeout=10.0) as geocode_client:
-        tasks = []
-        keys = []
-        for key, (lat, lng) in unique.items():
-            keys.append(key)
-            tasks.append(
-                geocode_client.get(
-                    GEOCODE_URL,
-                    params={
-                        "latlng": f"{lat},{lng}",
-                        "key": settings.google_maps_api_key,
-                    },
-                )
+    tasks = []
+    keys = []
+    for key, (lat, lng) in unique.items():
+        keys.append(key)
+        tasks.append(
+            geocode_client.get(
+                GEOCODE_URL,
+                params={
+                    "latlng": f"{lat},{lng}",
+                    "key": settings.google_maps_api_key,
+                },
             )
-        responses = await asyncio.gather(*tasks, return_exceptions=True)
+        )
+    responses = await asyncio.gather(*tasks, return_exceptions=True)
 
     for key, resp in zip(keys, responses):
         lat, lng = unique[key]

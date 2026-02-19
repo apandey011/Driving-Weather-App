@@ -26,7 +26,3 @@ export function saveToHistory(entry: RecentRoute): void {
   filtered.unshift(entry);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered.slice(0, MAX_ENTRIES)));
 }
-
-export function clearHistory(): void {
-  localStorage.removeItem(STORAGE_KEY);
-}
