@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 import polyline as polyline_codec
 
-from app.services.sampling import INTERVAL_SECONDS, _haversine, _interpolate, sample_route_points
+from app.services.sampling import _haversine, _interpolate, sample_route_points
 
 
 # ---------------------------------------------------------------------------

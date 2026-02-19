@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from app.services.cache import TTLCache
+from app.services.cache import RouteCacheManager, TTLCache
 
 
 # ---------------------------------------------------------------------------
@@ -64,12 +64,12 @@ class TestGet:
     def test_returns_none_after_ttl_expired(self):
         cache = TTLCache(ttl=60)
         # Pretend set happened at t=1000
-        with patch("app.services.cache.time") as mock_time:
+        with patch("app.services.cache.memory.time") as mock_time:
             mock_time.time.return_value = 1000.0
             cache.set("k", "val")
 
         # Now it's t=1061 (>60s TTL)
-        with patch("app.services.cache.time") as mock_time:
+        with patch("app.services.cache.memory.time") as mock_time:
             mock_time.time.return_value = 1061.0
             assert cache.get("k") is None
 
@@ -125,3 +125,19 @@ class TestSet:
         keys = list(cache._store.keys())
         assert keys[-1] == "a"
         assert keys[0] == "b"
+
+
+class TestRouteCacheManager:
+    def test_defaults_to_memory_backend(self, monkeypatch):
+        monkeypatch.setattr("app.services.cache.settings.cache_backend", "memory")
+        manager = RouteCacheManager()
+        manager.configure()
+        assert manager.backend_name == "TTLCache"
+
+    def test_redis_failure_falls_back_to_memory(self, monkeypatch):
+        monkeypatch.setattr("app.services.cache.settings.cache_backend", "redis")
+        monkeypatch.setattr("app.services.cache.settings.redis_url", "redis://localhost:6379/0")
+        with patch("app.services.cache.RedisRouteCache", side_effect=RuntimeError("redis down")):
+            manager = RouteCacheManager()
+            manager.configure()
+        assert manager.backend_name == "TTLCache"

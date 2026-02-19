@@ -6,7 +6,7 @@ import httpx
 import pytest
 import respx
 
-from app.models import LatLng, Waypoint, WeatherData
+from app.models import LatLng, Waypoint
 from app.services.weather import (
     HOURLY_PARAMS,
     OPEN_METEO_URL,
@@ -189,14 +189,15 @@ class TestGetWeatherForWaypoints:
     @respx.mock
     async def test_one_failure_doesnt_block_others(self):
         """If one waypoint fetch fails, others should still succeed."""
-        # First call succeeds, second raises an error, third succeeds
-        respx.get(OPEN_METEO_URL).mock(
-            side_effect=[
-                httpx.Response(200, json=_hourly_response(temperature=10.0)),
-                httpx.Response(500, json={"error": "server error"}),
-                httpx.Response(200, json=_hourly_response(temperature=20.0)),
-            ]
-        )
+        def responder(request: httpx.Request) -> httpx.Response:
+            lat = request.url.params.get("latitude")
+            if lat == "34.05":
+                return httpx.Response(500, json={"error": "server error"})
+            if lat == "37.77":
+                return httpx.Response(200, json=_hourly_response(temperature=10.0))
+            return httpx.Response(200, json=_hourly_response(temperature=20.0))
+
+        respx.get(OPEN_METEO_URL).mock(side_effect=responder)
         wp1 = _make_wp(lat=37.77, lng=-122.42)
         wp2 = _make_wp(lat=34.05, lng=-118.24)
         wp3 = _make_wp(lat=40.71, lng=-74.01)

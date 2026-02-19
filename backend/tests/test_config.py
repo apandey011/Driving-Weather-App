@@ -31,6 +31,9 @@ class TestSettings:
             with patch.dict(os.environ, env, clear=True):
                 s = Settings()
         assert s.frontend_origin == "http://localhost:5173"
+        assert s.log_format == "plain"
+        assert s.route_weather_rate_limit == "30/minute"
+        assert s.cache_backend == "memory"
 
     def test_missing_api_key_raises_validation_error(self):
         """If GOOGLE_MAPS_API_KEY is not set (and no .env file), Settings() should raise."""

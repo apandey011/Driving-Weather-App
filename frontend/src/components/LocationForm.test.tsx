@@ -17,14 +17,6 @@ vi.mock("./PlaceAutocomplete", () => ({
 }));
 
 describe("LocationForm", () => {
-  beforeEach(() => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   it("renders origin input, destination input, datetime input, and submit button", () => {
     render(<LocationForm onSubmit={vi.fn()} loading={false} />);
     expect(screen.getByTestId("Starting location")).toBeInTheDocument();
@@ -43,11 +35,10 @@ describe("LocationForm", () => {
 
   it("shows validation error when both fields are empty", async () => {
     render(<LocationForm onSubmit={vi.fn()} loading={false} />);
-
     const form = screen.getByRole("button", { name: /get route weather/i }).closest("form");
     expect(form).toBeTruthy();
+
     fireEvent.submit(form!);
-    vi.runAllTimers();
 
     await waitFor(() => {
       expect(screen.getByText("Please enter both origin and destination.")).toBeInTheDocument();
@@ -55,7 +46,7 @@ describe("LocationForm", () => {
   });
 
   it("shows validation error when origin equals destination", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const user = userEvent.setup();
     render(<LocationForm onSubmit={vi.fn()} loading={false} />);
 
     const originInput = screen.getByTestId("Starting location");
@@ -63,7 +54,6 @@ describe("LocationForm", () => {
     await user.type(originInput, "San Francisco");
     await user.type(destInput, "San Francisco");
     await user.click(screen.getByRole("button", { name: /get route weather/i }));
-    vi.runAllTimers();
 
     await waitFor(() => {
       expect(screen.getByText("Origin and destination must be different.")).toBeInTheDocument();
@@ -71,7 +61,7 @@ describe("LocationForm", () => {
   });
 
   it("calls onSubmit with correct arguments on valid submission", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const user = userEvent.setup();
     const onSubmit = vi.fn();
     render(<LocationForm onSubmit={onSubmit} loading={false} />);
 
@@ -80,7 +70,6 @@ describe("LocationForm", () => {
     await user.type(originInput, "San Francisco");
     await user.type(destInput, "Los Angeles");
     await user.click(screen.getByRole("button", { name: /get route weather/i }));
-    vi.runAllTimers();
 
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledTimes(1);
@@ -91,7 +80,7 @@ describe("LocationForm", () => {
   });
 
   it("swaps origin and destination values when swap button is clicked", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const user = userEvent.setup();
     render(<LocationForm onSubmit={vi.fn()} loading={false} />);
 
     const originInput = screen.getByTestId("Starting location") as HTMLInputElement;
@@ -113,7 +102,7 @@ describe("LocationForm", () => {
   });
 
   it("clears validation error on valid submit", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const user = userEvent.setup();
     const onSubmit = vi.fn();
     render(<LocationForm onSubmit={onSubmit} loading={false} />);
 
@@ -121,7 +110,6 @@ describe("LocationForm", () => {
     const form = screen.getByRole("button", { name: /get route weather/i }).closest("form");
     expect(form).toBeTruthy();
     fireEvent.submit(form!);
-    vi.runAllTimers();
 
     await waitFor(() => {
       expect(screen.getByText("Please enter both origin and destination.")).toBeInTheDocument();
@@ -133,7 +121,6 @@ describe("LocationForm", () => {
     await user.type(originInput, "San Francisco");
     await user.type(destInput, "Los Angeles");
     await user.click(screen.getByRole("button", { name: /get route weather/i }));
-    vi.runAllTimers();
 
     await waitFor(() => {
       expect(screen.queryByText("Please enter both origin and destination.")).not.toBeInTheDocument();

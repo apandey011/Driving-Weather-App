@@ -1,17 +1,8 @@
 """Tests for app.services.scoring — feature extraction, advisories, scoring."""
 
-from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, patch
 
 import pytest
-
-from app.models import (
-    LatLng,
-    RouteWithWeather,
-    Waypoint,
-    WeatherAdvisory,
-    WeatherData,
-)
 from app.services.scoring import (
     _check_advisory_conditions,
     _generate_reason,

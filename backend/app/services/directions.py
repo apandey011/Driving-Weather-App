@@ -4,6 +4,7 @@ import httpx
 from fastapi import HTTPException
 
 from ..config import settings
+from .http_client import request_with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,9 @@ client = httpx.AsyncClient(timeout=30.0)
 async def get_routes(origin: str, destination: str) -> dict:
     """Fetch all route alternatives from Google Directions API."""
     logger.info("Fetching directions: %s -> %s", origin, destination)
-    response = await client.get(
+    response = await request_with_retry(
+        client,
+        "GET",
         DIRECTIONS_URL,
         params={
             "origin": origin,

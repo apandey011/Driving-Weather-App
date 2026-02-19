@@ -22,6 +22,7 @@ A full-stack web application that finds the best driving route between two locat
 - **Interactive map** — Google Maps with color-coded polylines, weather markers with emoji indicators, and clickable detail cards
 - **Safety advisories** — Rule-based alerts for dangerous conditions (heavy rain, snow, thunderstorms, high winds)
 - **Temperature toggle** — Switch between Celsius and Fahrenheit
+- **Operational visibility** — Request ID propagation, structured logs, and Prometheus `/metrics`
 
 ## Architecture
 
@@ -94,6 +95,24 @@ npm install
 npm run dev
 ```
 
+### Environment Variables
+
+| Variable | App | Default | Required | Purpose |
+|---|---|---|---|---|
+| `GOOGLE_MAPS_API_KEY` | Backend | — | Yes | Google Directions + Geocoding API key |
+| `FRONTEND_ORIGIN` | Backend | `http://localhost:5173` | No | CORS origin |
+| `LOG_FORMAT` | Backend | `plain` | No | `plain` or `json` backend logs |
+| `ROUTE_WEATHER_RATE_LIMIT` | Backend | `30/minute` | No | Per-IP rate limit for `POST /api/route-weather` |
+| `SENTRY_DSN_BACKEND` | Backend | unset | No | Backend Sentry DSN |
+| `SENTRY_ENVIRONMENT` | Backend | `development` | No | Backend Sentry environment tag |
+| `CACHE_BACKEND` | Backend | `memory` | No | `memory` or `redis` |
+| `REDIS_URL` | Backend | unset | Conditionally | Required when `CACHE_BACKEND=redis` |
+| `VITE_GOOGLE_MAPS_API_KEY` | Frontend | — | Yes | Google Maps JavaScript API key |
+| `VITE_API_BASE` | Frontend | empty | No | Backend origin override |
+| `VITE_SENTRY_DSN` | Frontend | unset | No | Frontend Sentry DSN |
+| `VITE_SENTRY_ENVIRONMENT` | Frontend | `development` | No | Frontend Sentry environment tag |
+| `VITE_SENTRY_RELEASE` | Frontend | unset | No | Frontend release tag |
+
 ### Testing
 
 ```bash
@@ -133,6 +152,27 @@ The project deploys as a single service on Railway using the included `Dockerfil
 ```
 
 Returns multiple scored routes with per-waypoint weather data, a recommended route index, composite scores, and safety advisories.
+
+Operational endpoints:
+- `GET /health` — liveness check
+- `GET /metrics` — Prometheus metrics
+
+Every API response includes `X-Request-ID`.
+
+## Troubleshooting
+
+### `429 Too Many Requests`
+- Response body: `{"detail":"Rate limit exceeded"}`
+- Check backend `ROUTE_WEATHER_RATE_LIMIT` and request burst behavior.
+- Use `X-Request-ID` in logs to trace retries and user sessions.
+
+### Trace a failing request
+1. Capture `X-Request-ID` from the API response headers.
+2. Search backend logs for `request_id=<value>`.
+3. Inspect corresponding `status_code`, `path`, and `duration_ms` fields.
+
+### Redis cache configured but unavailable
+- If `CACHE_BACKEND=redis` and `REDIS_URL` is missing or unreachable, the app logs a warning and falls back to in-memory cache.
 
 ## License
 

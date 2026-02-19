@@ -1,7 +1,7 @@
 """Integration tests for app.routes — the POST /api/route-weather endpoint."""
 
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import httpx
 import pytest
@@ -10,14 +10,11 @@ from fastapi import HTTPException
 from app.main import app
 from app.models import (
     LatLng,
-    MultiRouteResponse,
     RouteRecommendation,
     RouteScore,
-    RouteWithWeather,
     Waypoint,
-    WeatherAdvisory,
-    WeatherData,
 )
+from app.rate_limit import SLOWAPI_AVAILABLE, limiter
 from app.services.cache import route_cache
 
 
@@ -93,9 +90,15 @@ class TestRouteWeatherEndpoint:
     @pytest.fixture(autouse=True)
     def clear_cache(self):
         """Clear the route cache before each test."""
-        route_cache._store.clear()
+        route_cache.clear()
+        storage = getattr(limiter, "_storage", None)
+        if storage and hasattr(storage, "reset"):
+            storage.reset()
         yield
-        route_cache._store.clear()
+        route_cache.clear()
+        storage = getattr(limiter, "_storage", None)
+        if storage and hasattr(storage, "reset"):
+            storage.reset()
 
     @pytest.mark.asyncio
     async def test_successful_end_to_end(self):
@@ -249,3 +252,35 @@ class TestRouteWeatherEndpoint:
             )
 
         assert resp.status_code == 422
+
+    @pytest.mark.asyncio
+    @pytest.mark.skipif(not SLOWAPI_AVAILABLE, reason="slowapi not installed")
+    async def test_rate_limit_exceeded_returns_429(self):
+        with (
+            patch("app.routes.get_routes", new_callable=AsyncMock) as mock_routes,
+            patch("app.routes.sample_route_points") as mock_sample,
+            patch("app.routes.get_weather_for_waypoints", new_callable=AsyncMock) as mock_weather,
+            patch("app.routes.score_routes", new_callable=AsyncMock) as mock_score,
+        ):
+            mock_routes.return_value = _sample_route_data()
+            mock_sample.return_value = _sample_waypoints()
+            mock_weather.return_value = []
+            mock_score.return_value = _sample_recommendation()
+
+            statuses: list[int] = []
+            details: list[str] = []
+            async with httpx.AsyncClient(
+                transport=httpx.ASGITransport(app=app),
+                base_url="http://test",
+            ) as client:
+                for _ in range(40):
+                    resp = await client.post(
+                        "/api/route-weather",
+                        json={"origin": "SF", "destination": "LA"},
+                    )
+                    statuses.append(resp.status_code)
+                    if resp.status_code == 429:
+                        details.append(resp.json().get("detail", ""))
+
+            assert 429 in statuses
+            assert "Rate limit exceeded" in details

@@ -88,26 +88,24 @@ export default forwardRef<LocationFormHandle, Props>(
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setTimeout(() => {
-      const originText = originRef.current?.value.trim() || "";
-      const destText = destinationRef.current?.value.trim() || "";
-      if (!originText || !destText) {
-        setValidationError("Please enter both origin and destination.");
-        return;
-      }
-      if (originText === destText) {
-        setValidationError("Origin and destination must be different.");
-        return;
-      }
-      setValidationError(null);
-      onSubmit(
-        originQueryRef.current || originText,
-        destinationQueryRef.current || destText,
-        departureTime || undefined,
-        originText,
-        destText
-      );
-    }, 0);
+    const originText = originRef.current?.value.trim() || "";
+    const destText = destinationRef.current?.value.trim() || "";
+    if (!originText || !destText) {
+      setValidationError("Please enter both origin and destination.");
+      return;
+    }
+    if (originText === destText) {
+      setValidationError("Origin and destination must be different.");
+      return;
+    }
+    setValidationError(null);
+    onSubmit(
+      originQueryRef.current || originText,
+      destinationQueryRef.current || destText,
+      departureTime || undefined,
+      originText,
+      destText
+    );
   }
 
   return (

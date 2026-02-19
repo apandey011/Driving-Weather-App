@@ -2,9 +2,11 @@ import logging
 from datetime import datetime, timezone
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
+from .config import settings
 from .models import RouteRequest, RouteWithWeather, MultiRouteResponse
+from .rate_limit import limiter
 from .services.cache import route_cache
 from .services.directions import get_routes
 from .services.sampling import sample_route_points
@@ -17,16 +19,17 @@ router = APIRouter()
 
 
 @router.post("/api/route-weather", response_model=MultiRouteResponse)
-async def route_weather(request: RouteRequest):
-    departure_iso = request.departure_time.isoformat() if request.departure_time else None
-    cache_key = route_cache.make_key(request.origin, request.destination, departure_iso)
+@limiter.limit(settings.route_weather_rate_limit)
+async def route_weather(request: Request, payload: RouteRequest):
+    departure_iso = payload.departure_time.isoformat() if payload.departure_time else None
+    cache_key = route_cache.make_key(payload.origin, payload.destination, departure_iso)
     cached = route_cache.get(cache_key)
     if cached:
         return cached
 
     try:
-        routes_data = await get_routes(request.origin, request.destination)
-        departure = request.departure_time or datetime.now(timezone.utc)
+        routes_data = await get_routes(payload.origin, payload.destination)
+        departure = payload.departure_time or datetime.now(timezone.utc)
 
         # Sample waypoints for each route
         all_route_waypoints = []
@@ -102,6 +105,6 @@ async def route_weather(request: RouteRequest):
             status_code=502,
             detail=f"Upstream API error: {exc.response.status_code}",
         )
-    except Exception as exc:
+    except Exception:
         logger.exception("Unexpected error in route_weather")
         raise HTTPException(status_code=500, detail="Internal server error")

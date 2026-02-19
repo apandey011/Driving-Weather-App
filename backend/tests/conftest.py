@@ -9,13 +9,10 @@ os.environ.setdefault("FRONTEND_ORIGIN", "http://localhost:5173")
 
 from datetime import datetime, timezone
 
-import pytest
-
 from app.models import (
     LatLng,
     RouteWithWeather,
     Waypoint,
-    WeatherAdvisory,
     WeatherData,
 )
 

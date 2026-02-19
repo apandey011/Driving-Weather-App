@@ -5,6 +5,7 @@ from datetime import datetime
 import httpx
 
 from ..models import Waypoint, WeatherData
+from .http_client import request_with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +61,9 @@ async def _fetch_weather_for_point(
     """Fetch hourly forecast for a single point and extract the closest hour."""
     date_str = target_time.strftime("%Y-%m-%d")
     async with _semaphore:
-        response = await client.get(
+        response = await request_with_retry(
+            client,
+            "GET",
             OPEN_METEO_URL,
             params={
                 "latitude": round(lat, 4),
